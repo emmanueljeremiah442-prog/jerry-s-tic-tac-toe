@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e0f13">
+<meta name="author" content="Jerry Designs">
+<meta name="description" content="Jerry’s Games: Tic Tac Toe by Jerry Designs">
+<title>Jerry’s Games | Tic Tac Toe</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+:root{
+  --bg:#0e0f13;--surface:#16181f;--line:#2a2d38;--text:#e7e5df;--muted:#8b8f9c;
+  --gold:#c8a96a;--blue:#7f9cb8;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e0f13}}
+:root[data-theme="dark"]{--bg:#0e0f13}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{color-scheme:dark}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);
+  font-family:Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  display:flex;flex-direction:column;align-items:center;padding:20px 16px;gap:16px}
+.brand{display:flex;align-items:center;gap:12px;width:min(92vw,360px);
+  font-size:.7rem;letter-spacing:.38em;text-transform:uppercase;color:var(--gold)}
+.brand::before,.brand::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--gold))}
+.brand::after{background:linear-gradient(270deg,transparent,var(--gold))}
+h1{margin:0;font-family:Georgia,"Times New Roman",serif;font-weight:400;font-size:2.1rem;letter-spacing:.06em}
+.sub{margin:-8px 0 0;color:var(--muted);font-size:.78rem;letter-spacing:.22em;text-transform:uppercase}
+.modes{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.modes button{padding:10px 18px;border:0;background:transparent;color:var(--muted);font-size:.9rem;cursor:pointer;letter-spacing:.04em}
+.modes button.active{background:var(--surface);color:var(--gold)}
+.score{display:flex;gap:10px;width:min(92vw,330px)}
+.score div{flex:1;text-align:center;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 4px}
+.score b{display:block;font-size:1.3rem;font-weight:600}
+.score span{font-size:.65rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+#status{font-size:1.15rem;min-height:1.6rem;letter-spacing:.03em}
+.board{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:min(92vw,330px)}
+.cell{aspect-ratio:1;background:var(--surface);border:1px solid var(--line);border-radius:12px;
+  font-family:Georgia,serif;font-size:3.2rem;cursor:pointer;color:var(--text);transition:background .2s,border-color .2s}
+.cell:active{background:#1d2029}
+.cell.x{color:var(--gold)}.cell.o{color:var(--blue)}
+.cell.win{background:rgba(200,169,106,.14);border-color:var(--gold)}
+.actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.btn{padding:12px 22px;font-size:.9rem;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;
+  background:transparent;color:var(--text);border:1px solid var(--line);border-radius:10px}
+.btn.primary{border-color:var(--gold);color:var(--gold)}
+footer{margin-top:auto;padding-top:10px;text-align:center;font-size:.7rem;letter-spacing:.14em;color:var(--muted);line-height:1.8}
+footer b{color:var(--gold);font-weight:600}
+#about{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:20px;
+  background:rgba(6,7,9,.88);z-index:10}
+#about.open{display:flex}
+.card{width:min(100%,400px);max-height:90vh;overflow-y:auto;background:var(--surface);border:1px solid var(--line);
+  border-radius:16px;padding:24px}
+.card h2{margin:0;font-family:Georgia,serif;font-weight:400;font-size:1.6rem;letter-spacing:.08em}
+.card .role-line{margin:4px 0 16px;color:var(--gold);font-size:.72rem;letter-spacing:.24em;text-transform:uppercase}
+.card hr{border:0;border-top:1px solid var(--line);margin:16px 0}
+.role{margin:0 0 14px}.role strong{display:block;font-size:.95rem}.role span{color:var(--muted);font-size:.85rem;line-height:1.5}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips i{font-style:normal;font-size:.72rem;letter-spacing:.08em;padding:5px 10px;border:1px solid var(--line);border-radius:20px;color:var(--muted)}
+.links{display:flex;gap:14px;flex-wrap:wrap;margin-top:6px}
+.links a{color:var(--gold);font-size:.85rem;letter-spacing:.08em}
+.meta{margin-top:16px;color:var(--muted);font-size:.72rem;letter-spacing:.12em}
+</style>
+</head>
+<body>
+<div class="brand">Jerry’s Games</div>
+<h1>Tic Tac Toe</h1>
+<p class="sub">Classic &middot; Refined</p>
+<div class="modes">
+  <button id="pvp" class="active">2 Players</button>
+  <button id="cpu">vs Computer</button>
+</div>
+<div class="score">
+  <div><b id="sx">0</b><span id="lx">X</span></div>
+  <div><b id="sd">0</b><span>Draws</span></div>
+  <div><b id="so">0</b><span id="lo">O</span></div>
+</div>
+<div id="status"></div>
+<div class="board" id="board"></div>
+<div class="actions">
+  <button class="btn primary" id="reset">New Game</button>
+  <button class="btn" id="sound">Sound: On</button>
+  <button class="btn" id="aboutBtn">About</button>
+</div>
+<footer>
+  Designed &amp; developed by <b id="fName"></b><br>
+  Created <span id="fDate"></span> &middot; v<span id="fVer"></span>
+</footer>
+
+<div id="about" role="dialog" aria-modal="true" aria-label="About the developer">
+  <div class="card">
+    <h2 id="aName"></h2>
+    <div class="role-line">Programmer &middot; Website Designer &middot; Graphics Designer</div>
+    <div id="aRoles"></div>
+    <hr>
+    <div class="chips" id="aSkills"></div>
+    <div class="links" id="aLinks"></div>
+    <div class="meta" id="aMeta"></div>
+    <hr>
+    <button class="btn primary" id="closeAbout" style="width:100%">Close</button>
+  </div>
+</div>
+
+<script>
+/* ===== EDIT YOUR DETAILS HERE ===== */
+const CONFIG = {
+  appName: 'Jerry\u2019s Games',
+  name: 'Jerry Designs',
+  created: '2026-11-21',          // project date created (YYYY-MM-DD)
+  version: '1.0.0',
+  roles: [
+    ['Programmer', 'Clean, reliable code for apps and games.'],
+    ['Website Designer', 'Fast, responsive websites with a considered look.'],
+    ['Graphics Designer', 'Logos, branding and visual identity.']
+  ],
+  skills: ['HTML & CSS', 'JavaScript', 'UI Design', 'Branding'],
+  links: { GitHub: '', Email: '', Website: '' }   // fill in the ones you want shown
+};
+/* =================================== */
+
+const LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+let board, turn, over, mode = 'pvp', cpuTimer = null;
+const score = { X: 0, O: 0, D: 0 };
+const $ = (id) => document.getElementById(id);
+const boardEl = $('board'), statusEl = $('status');
+
+/* ---- branding ---- */
+const dateText = new Date(CONFIG.created + 'T00:00:00')
+  .toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+$('fName').textContent = CONFIG.name; $('fDate').textContent = dateText; $('fVer').textContent = CONFIG.version;
+$('aName').textContent = CONFIG.name;
+$('aRoles').innerHTML = CONFIG.roles.map(([t, d]) => '<p class="role"><strong>' + t + '</strong><span>' + d + '</span></p>').join('');
+$('aSkills').innerHTML = CONFIG.skills.map((s) => '<i>' + s + '</i>').join('');
+$('aLinks').innerHTML = Object.entries(CONFIG.links).filter(([, v]) => v).map(([k, v]) =>
+  '<a href="' + (k === 'Email' && !v.startsWith('mailto:') ? 'mailto:' + v : v) + '" target="_blank" rel="noopener">' + k + '</a>').join('');
+$('aMeta').textContent = 'Created ' + dateText + '  |  Version ' + CONFIG.version;
+$('aboutBtn').onclick = () => $('about').classList.add('open');
+$('closeAbout').onclick = () => $('about').classList.remove('open');
+$('about').onclick = (e) => { if (e.target.id === 'about') $('about').classList.remove('open'); };
+
+/* ---- sound (Web Audio: works on phones even when played after a delay) ---- */
+const FAH_B64 = '';   // (only filled in the single-file preview)
+const FAH_URL = FAH_B64 ? 'data:audio/mpeg;base64,' + FAH_B64 : 'assets/fahhh.mp3';
+const fallback = new Audio(FAH_URL); fallback.preload = 'auto';
+let soundOn = true, ctx = null, buf = null, loading = false, primed = false, pending = false;
+try { soundOn = localStorage.getItem('jd-ttt-sound') !== 'off'; } catch (e) {}
+function showSound() { $('sound').textContent = 'Sound: ' + (soundOn ? 'On' : 'Off'); }
+showSound();
+function getCtx() {
+  if (!ctx) { const AC = window.AudioContext || window.webkitAudioContext; if (AC) ctx = new AC(); }
+  return ctx;
+}
+async function loadBuf() {
+  const c = getCtx(); if (!c || buf || loading) return; loading = true;
+  try {
+    let ab;
+    if (FAH_B64) { const bin = atob(FAH_B64), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); ab = u.buffer; }
+    else { const r = await fetch(FAH_URL); ab = await r.arrayBuffer(); }
+    buf = await c.decodeAudioData(ab);
+  } catch (e) { console.warn('Sound could not load, using fallback', e); }
+  loading = false;
+}
+// phones block sound until the first tap, so unlock it on that tap
+function unlock() {
+  if (!primed) {
+    primed = true; fallback.muted = true;
+    const pr = fallback.play();
+    const done = () => { if (!pending) { fallback.pause(); fallback.currentTime = 0; } fallback.muted = false; };
+    if (pr && pr.then) pr.then(done).catch(() => { fallback.muted = false; }); else done();
+  }
+  const c = getCtx();
+  if (c) {
+    if (c.state === 'suspended') c.resume();
+    const s = c.createBufferSource(); s.buffer = c.createBuffer(1, 1, 22050); s.connect(c.destination); s.start(0);
+    loadBuf();
+  }
+}
+['pointerdown', 'touchstart', 'click', 'keydown'].forEach((ev) => addEventListener(ev, unlock, { passive: true }));
+function viaContext() {
+  const c = ctx;
+  if (c && buf) { if (c.state === 'suspended') c.resume(); const s = c.createBufferSource(); s.buffer = buf; s.connect(c.destination); s.start(0); }
+}
+function playFah() {
+  if (!soundOn) return;
+  pending = true; setTimeout(() => { pending = false; }, 3000);
+  try {
+    fallback.muted = false; fallback.currentTime = 0;
+    const p = fallback.play();
+    if (p && p.catch) p.catch(viaContext);   // if the browser blocks the player, use Web Audio instead
+  } catch (e) { viaContext(); }
+}
+$('sound').onclick = () => {
+  soundOn = !soundOn; showSound();
+  try { localStorage.setItem('jd-ttt-sound', soundOn ? 'on' : 'off'); } catch (e) {}
+  if (soundOn) playFah();   // plays once as a test when you turn it on
+};
+
+/* ---- game ---- */
+for (let i = 0; i < 9; i++) {
+  const b = document.createElement('button');
+  b.className = 'cell'; b.setAttribute('aria-label', 'Cell ' + (i + 1));
+  b.onclick = () => play(i);
+  boardEl.appendChild(b);
+}
+const cells = boardEl.children;
+
+function winnerLine(b) { return LINES.find(([a, c, d]) => b[a] && b[a] === b[c] && b[a] === b[d]); }
+function who(p) { return mode === 'cpu' ? (p === 'X' ? 'You' : 'Computer') : p; }
+function showScore() {
+  $('sx').textContent = score.X; $('sd').textContent = score.D; $('so').textContent = score.O;
+  $('lx').textContent = mode === 'cpu' ? 'You' : 'X'; $('lo').textContent = mode === 'cpu' ? 'CPU' : 'O';
+}
+function render() {
+  board.forEach((v, i) => { cells[i].textContent = v || ''; cells[i].className = 'cell' + (v ? ' ' + v.toLowerCase() : ''); });
+  statusEl.textContent = mode === 'cpu' ? (turn === 'X' ? 'Your turn' : 'Computer is thinking...') : turn + "\u2019s turn";
+}
+function newGame() {
+  clearTimeout(cpuTimer);
+  board = Array(9).fill(null); turn = 'X'; over = false;
+  render(); showScore();
+}
+function play(i) {
+  if (board[i] || over) return;
+  if (mode === 'cpu' && turn === 'O') return;
+  move(i);
+  if (mode === 'cpu' && !over) cpuTimer = setTimeout(cpuMove, 450);
+}
+function move(i) {
+  board[i] = turn;
+  const line = winnerLine(board);
+  render();
+  if (line) {
+    over = true; score[turn]++;
+    line.forEach((c) => cells[c].classList.add('win'));
+    statusEl.textContent = mode === 'cpu' ? (turn === 'X' ? 'You win!' : 'Computer wins!') : turn + ' wins!';
+    if (mode === 'pvp' || turn === 'O') playFah();   // 2 players: any win. vs Computer: only when the computer wins
+  } else if (board.every(Boolean)) {
+    over = true; score.D++;
+    render(); statusEl.textContent = "It\u2019s a draw!";
+  } else {
+    turn = turn === 'X' ? 'O' : 'X';
+    render();
+  }
+  showScore();
+}
+function findSpot(player) {
+  for (const [a, b, c] of LINES) {
+    const vals = [board[a], board[b], board[c]];
+    if (vals.filter((v) => v === player).length === 2 && vals.includes(null)) return [a, b, c][vals.indexOf(null)];
+  }
+  return -1;
+}
+function cpuMove() {
+  if (over || turn !== 'O') return;
+  let i = findSpot('O'); if (i < 0) i = findSpot('X');
+  if (i < 0 && !board[4]) i = 4;
+  if (i < 0) {
+    const free = board.map((v, k) => (v ? -1 : k)).filter((k) => k >= 0);
+    i = free[Math.floor(Math.random() * free.length)];
+  }
+  move(i);
+}
+function setMode(m) {
+  mode = m;
+  $('pvp').classList.toggle('active', m === 'pvp');
+  $('cpu').classList.toggle('active', m === 'cpu');
+  score.X = score.O = score.D = 0;
+  newGame();
+}
+$('pvp').onclick = () => setMode('pvp');
+$('cpu').onclick = () => setMode('cpu');
+$('reset').onclick = newGame;
+newGame();
+
+/* ---- offline / installable (only when served from a web host) ---- */
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
+</script>
+</body>
+</html>
